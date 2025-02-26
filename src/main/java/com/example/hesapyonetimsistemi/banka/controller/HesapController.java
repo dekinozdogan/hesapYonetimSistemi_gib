@@ -39,7 +39,7 @@ public class HesapController {
 
     @GetMapping("/hesap/{tcKimlikNo}/{hesapTuru}")
     public ResponseEntity<HesapDto> getHesapByTcVeTuru( @PathVariable Long tcKimlikNo, @PathVariable HesapTuru hesapTuru) {
-
+//
     if(isValidTCKN(tcKimlikNo)) {
         List<Hesap> hesapListesi = hesapService.getHesapListesiByTcTur(tcKimlikNo, hesapTuru);
 

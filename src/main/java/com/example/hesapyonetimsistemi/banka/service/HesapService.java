@@ -2,6 +2,7 @@ package com.example.hesapyonetimsistemi.banka.service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,30 +28,50 @@ public class HesapService {
 
     @Autowired
     public HesapService(HesapRepository hesapRepository, HesapHareketleriRepository hesapHareketleriRepository,
-            HesapHareketleriService hesapHareketleriService) {
+                        HesapHareketleriService hesapHareketleriService) {
         this.hesapRepository = hesapRepository;
         this.hesapHareketleriRepository = hesapHareketleriRepository;
         this.hesapHareketleriService = hesapHareketleriService;
     }
 
     public List<Hesap> getHesapListesiByTcTur(Long hesapSahipKimlikNo, HesapTuru hesapTuru) {
-        return null;
+        return hesapRepository.getHesapListesiByTcTur(hesapSahipKimlikNo, hesapTuru);
     }
 
     public Hesap hesapEkle(YeniHesapDto yeniHesapDto) {
+        List<Hesap> mevcutHesap = hesapRepository.getHesapListesiByTcTur(
+                yeniHesapDto.getHesapSahipTcNo(), yeniHesapDto.getHesapturu());
 
-         // boolean hesapVarMi = hesapRepository.isHesapVarMi(yeniHesapDto.getHesapSahipTcNo(), yeniHesapDto.getHesapturu());
+        if (mevcutHesap != null) {
+            Hesap hesap = Hesap.builder()
+                    .hesapSahipKimlikNo(yeniHesapDto.getHesapSahipTcNo())
+                    .hesapSahipAd(yeniHesapDto.getHesapSahipAd())
+                    .hesapTuru(yeniHesapDto.getHesapturu())
+                    .bakiye(BigDecimal.ZERO)
+                    .build();
 
-         return null;
-      }
+            return hesapRepository.save(hesap);
+        } else {
+            throw new RuntimeException("Bu kimlik numarası ve hesap türüyle zaten bir hesap mevcut.");
+        }
+    }
+
 
     public Hesap hesapGuncelle(UUID hesapId, HesapDto dto) {
+        // Hesabı veritabanından getir, yoksa hata fırlat
+        Hesap hesap = hesapRepository.findById(hesapId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hesap bulunamadı"));
 
+        // Yeni değerleri güncelle
+        hesap.setHesapSahipAd(dto.getHesapSahipAd());
+        hesap.setHesapSahipSoyad(dto.getHesapSahipSoyad());
+        hesap.setBakiye(dto.getBakiye());
 
-        return null;
+        // Güncellenmiş hesap nesnesini kaydet ve döndür
+        return hesapRepository.save(hesap);
     }
-    // Entity dönmemizin sebebi client update olan bilgileri görmek isteyebilir 
-    
+
+    // Entity dönmemizin sebebi client update olan bilgileri görmek isteyebilir
 
     public void hesapSil(UUID hesapId) {
         if (!hesapRepository.existsById(hesapId)) {
@@ -59,21 +80,37 @@ public class HesapService {
         hesapRepository.deleteById(hesapId);
     }
 
-
     public Hesap paraYatir(UUID hesapId, BigDecimal miktar) {
+        Hesap hesap = hesapRepository.findById(hesapId)
+                .orElseThrow(() -> new RuntimeException("Hesap bulunamadı"));
 
-      return null;
-  }
+        BigDecimal yeniBakiye = hesap.getBakiye().add(miktar);
 
+        if (yeniBakiye.compareTo(new BigDecimal("9999999")) > 0) {
+            throw new RuntimeException("Bakiye en fazla 9.999.999 olabilir.");
+        }
 
-  public Hesap paraCek(UUID hesapId, BigDecimal miktar) {
+        hesapRepository.updateBakiye(hesap.getId(), yeniBakiye);
+        hesapHareketleriService.hesapHareketiEkle(hesap, miktar, HareketTuru.YATIRMA);
 
+        return hesap;
+    }
 
-    return null;
-}
- 
+    public Hesap paraCek(UUID hesapId, BigDecimal miktar) {
+        Hesap hesap = hesapRepository.findById(hesapId)
+                .orElseThrow(() -> new RuntimeException("Hesap bulunamadı"));
 
+        BigDecimal yeniBakiye = hesap.getBakiye().subtract(miktar);
 
+        if (yeniBakiye.compareTo(BigDecimal.ZERO) < 0) {
+            throw new RuntimeException("Bakiye 0'ın altına düşemez.");
+        }
+
+        hesapRepository.updateBakiye(hesap.getId(), yeniBakiye);
+        hesapHareketleriService.hesapHareketiEkle(hesap, miktar, HareketTuru.CEKME);
+
+        return hesap;
+    }
 
 }
     

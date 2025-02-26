@@ -17,6 +17,9 @@ import com.example.hesapyonetimsistemi.banka.enums.HareketTuru;
 
 @Repository
 public interface HesapHareketleriRepository extends JpaRepository<HesapHareketleri, UUID> {
-    
+
+    List<HesapHareketleri> findByHesapIdAndHareketTuru(UUID hesapId, HareketTuru hareketTuru);
+
+
 
 }

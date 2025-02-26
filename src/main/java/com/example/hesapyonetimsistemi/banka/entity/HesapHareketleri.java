@@ -37,7 +37,7 @@ public class HesapHareketleri {
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "hesap_id", nullable = false)
+    @JoinColumn(name = "hesap_id", nullable = false, columnDefinition = "BINARY(16)")
     private Hesap hesap;
 
     @Column(name = "islem_tarihi", nullable = false)
@@ -49,7 +49,4 @@ public class HesapHareketleri {
 
     @Column(name = "miktar", nullable = false, precision = 9, scale = 2)
     private BigDecimal miktar;
-
-    
-
 }

@@ -17,15 +17,16 @@ import com.example.hesapyonetimsistemi.banka.repository.HesapHareketleriReposito
 public class HesapHareketleriService {
     private final HesapHareketleriRepository hesapHareketleriRepository;
     @Autowired
+
     public HesapHareketleriService(HesapHareketleriRepository hesapHareketleriRepository) {
         this.hesapHareketleriRepository = hesapHareketleriRepository;
     }
 
-   public List<HesapHareketleri> getHesapHareketleriById(UUID id, HareketTuru hareketTuru) {
-        return null;
-   }
+    public List<HesapHareketleri> findByHesapIdAndHareketTuru(UUID id, HareketTuru hareketTuru) {
+        return hesapHareketleriRepository.findByHesapIdAndHareketTuru(id, hareketTuru);
+    }
 
-   public void hesapHareketiEkle(Hesap hesap, BigDecimal miktar, HareketTuru hareketTuru) {
+    public void hesapHareketiEkle(Hesap hesap, BigDecimal miktar, HareketTuru hareketTuru) {
         HesapHareketleri hareket = HesapHareketleri.builder()
                 .hesap(hesap)
                 .islemTarihi(LocalDateTime.now())
