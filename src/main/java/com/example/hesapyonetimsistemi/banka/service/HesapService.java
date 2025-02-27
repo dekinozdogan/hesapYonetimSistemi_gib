@@ -2,12 +2,14 @@ package com.example.hesapyonetimsistemi.banka.service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.example.hesapyonetimsistemi.banka.dto.HesapDto;
@@ -35,7 +37,7 @@ public class HesapService {
     public List<Hesap> getHesapListesiByTcTur(Long hesapSahipKimlikNo, HesapTuru hesapTuru) {
         return hesapRepository.getHesapListesiByTcTur(hesapSahipKimlikNo, hesapTuru);
     }
-
+    @Transactional
     public Hesap hesapEkle(YeniHesapDto yeniHesapDto) {
         List<Hesap> mevcutHesapListesi = hesapRepository.getHesapListesiByTcTur(
                 yeniHesapDto.getHesapSahipTcNo(), yeniHesapDto.getHesapTuru());
@@ -54,30 +56,34 @@ public class HesapService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Bu kimlik numarası ve hesap türüyle zaten bir hesap mevcut.");
         }
     }
-
+    @Transactional
     public Hesap hesapGuncelle(UUID hesapId, HesapDto dto) {
-
         Hesap hesap = hesapRepository.findById(hesapId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hesap bulunamadı"));
-        hesap.setHesapSahipAd(dto.getHesapSahipAd());
-        hesap.setHesapSahipSoyad(dto.getHesapSahipSoyad());
-        hesap.setBakiye(dto.getBakiye());
-
+        if(dto.getHesapSahipAd() != null && !dto.getHesapSahipAd().isEmpty()) {
+            hesap.setHesapSahipAd(dto.getHesapSahipAd());
+        }
+        if(dto.getHesapSahipSoyad() != null && !dto.getHesapSahipSoyad().isEmpty()) {
+            hesap.setHesapSahipSoyad(dto.getHesapSahipSoyad());
+        }
+        if(dto.getBakiye() != null) {
+            hesap.setBakiye(dto.getBakiye());
+        }
         return hesapRepository.save(hesap);
     }
 
     // Entity dönmemizin sebebi client update olan bilgileri görmek isteyebilir
-
+    @Transactional
     public void hesapSil(UUID hesapId) {
         if (!hesapRepository.existsById(hesapId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Hesap bulunamadı.");
         }
         hesapRepository.deleteById(hesapId);
     }
-
+    @Transactional
     public Hesap paraYatir(UUID hesapId, BigDecimal miktar) {
         Hesap hesap = hesapRepository.findById(hesapId)
-                .orElseThrow(() -> new RuntimeException("Hesap bulunamadı"));
+                .orElseThrow(() -> new NoSuchElementException("Hesap bulunamadı"));
 
         BigDecimal yeniBakiye = hesap.getBakiye().add(miktar);
 
@@ -90,10 +96,10 @@ public class HesapService {
         hesapHareketleriService.hesapHareketiEkle(hesap, miktar, HareketTuru.YATIRMA);
         return hesap;
     }
-
+    @Transactional
     public Hesap paraCek(UUID hesapId, BigDecimal miktar) {
         Hesap hesap = hesapRepository.findById(hesapId)
-                .orElseThrow(() -> new RuntimeException("Hesap bulunamadı"));
+                .orElseThrow(() -> new NoSuchElementException("Hesap bulunamadı"));
 
         BigDecimal yeniBakiye = hesap.getBakiye().subtract(miktar);
 

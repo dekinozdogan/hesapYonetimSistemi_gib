@@ -21,6 +21,5 @@ public class HesapDto {
     private String hesapSahipAd;
     private String hesapSahipSoyad;
     private HesapTuru hesapturu;
-    @JsonSerialize (using = LocalDateTimeSerializer.class)
     private BigDecimal bakiye;
 }

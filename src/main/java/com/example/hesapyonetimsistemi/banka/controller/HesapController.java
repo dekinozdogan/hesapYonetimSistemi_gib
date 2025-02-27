@@ -3,8 +3,11 @@ package com.example.hesapyonetimsistemi.banka.controller;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,9 +32,8 @@ import com.example.hesapyonetimsistemi.banka.service.HesapService;
 public class HesapController {
 
     private final HesapService hesapService;
-
+    @Autowired
     public HesapController(HesapService hesapService) {
-
         this.hesapService = hesapService;
     }
 
@@ -53,7 +55,7 @@ public class HesapController {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "TC Kimlik No 11 haneli olmalı ve sadece rakam içermeli");
             }
         } catch (ResponseStatusException e) {
-            throw e;
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (RuntimeException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Beklenmeyen bir hata oluştu", e);
         }
@@ -99,10 +101,9 @@ public class HesapController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body("Hesap Güncellenemedi: " + e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("Hesap güncelleme işlemi başarısız oldu.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Hesap güncelleme işlemi başarısız oldu.");
         }
     }
-
     @DeleteMapping("/hesapSil/{hesapId}")
     public ResponseEntity<Map<String, String>> hesapSil(@PathVariable UUID hesapId) {
         hesapService.hesapSil(hesapId);
@@ -117,7 +118,11 @@ public class HesapController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Hata: " + e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Bilinmeyen bir hata oluştu.");
+            if(e instanceof NoSuchElementException){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            }else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Hata: " + e.getMessage());
+            }
         }
     }
     @PutMapping("/paraCek/{hesapId}/{miktar}")
@@ -128,7 +133,11 @@ public class HesapController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Hata: " + e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Bilinmeyen bir hata oluştu.");
+            if(e instanceof NoSuchElementException){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            }else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Hata: " + e.getMessage());
+            }
         }
     }
 }
