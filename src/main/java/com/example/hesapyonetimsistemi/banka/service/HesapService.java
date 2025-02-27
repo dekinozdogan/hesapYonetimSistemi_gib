@@ -23,14 +23,12 @@ import com.example.hesapyonetimsistemi.banka.repository.HesapRepository;
 public class HesapService {
 
     private final HesapRepository hesapRepository;
-    private final HesapHareketleriRepository hesapHareketleriRepository;
     private final HesapHareketleriService hesapHareketleriService;
 
     @Autowired
-    public HesapService(HesapRepository hesapRepository, HesapHareketleriRepository hesapHareketleriRepository,
+    public HesapService(HesapRepository hesapRepository,
                         HesapHareketleriService hesapHareketleriService) {
         this.hesapRepository = hesapRepository;
-        this.hesapHareketleriRepository = hesapHareketleriRepository;
         this.hesapHareketleriService = hesapHareketleriService;
     }
 
@@ -39,35 +37,32 @@ public class HesapService {
     }
 
     public Hesap hesapEkle(YeniHesapDto yeniHesapDto) {
-        List<Hesap> mevcutHesap = hesapRepository.getHesapListesiByTcTur(
-                yeniHesapDto.getHesapSahipTcNo(), yeniHesapDto.getHesapturu());
+        List<Hesap> mevcutHesapListesi = hesapRepository.getHesapListesiByTcTur(
+                yeniHesapDto.getHesapSahipTcNo(), yeniHesapDto.getHesapTuru());
 
-        if (mevcutHesap != null) {
+        if (mevcutHesapListesi.isEmpty()) {
             Hesap hesap = Hesap.builder()
                     .hesapSahipKimlikNo(yeniHesapDto.getHesapSahipTcNo())
                     .hesapSahipAd(yeniHesapDto.getHesapSahipAd())
-                    .hesapTuru(yeniHesapDto.getHesapturu())
+                    .hesapSahipSoyad(yeniHesapDto.getHesapSahipSoyad())
+                    .hesapTuru(yeniHesapDto.getHesapTuru())
                     .bakiye(BigDecimal.ZERO)
                     .build();
 
             return hesapRepository.save(hesap);
         } else {
-            throw new RuntimeException("Bu kimlik numarası ve hesap türüyle zaten bir hesap mevcut.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Bu kimlik numarası ve hesap türüyle zaten bir hesap mevcut.");
         }
     }
 
-
     public Hesap hesapGuncelle(UUID hesapId, HesapDto dto) {
-        // Hesabı veritabanından getir, yoksa hata fırlat
+
         Hesap hesap = hesapRepository.findById(hesapId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hesap bulunamadı"));
-
-        // Yeni değerleri güncelle
         hesap.setHesapSahipAd(dto.getHesapSahipAd());
         hesap.setHesapSahipSoyad(dto.getHesapSahipSoyad());
         hesap.setBakiye(dto.getBakiye());
 
-        // Güncellenmiş hesap nesnesini kaydet ve döndür
         return hesapRepository.save(hesap);
     }
 
@@ -90,9 +85,9 @@ public class HesapService {
             throw new RuntimeException("Bakiye en fazla 9.999.999 olabilir.");
         }
 
+        hesap.setBakiye(yeniBakiye);
         hesapRepository.updateBakiye(hesap.getId(), yeniBakiye);
         hesapHareketleriService.hesapHareketiEkle(hesap, miktar, HareketTuru.YATIRMA);
-
         return hesap;
     }
 
@@ -106,9 +101,9 @@ public class HesapService {
             throw new RuntimeException("Bakiye 0'ın altına düşemez.");
         }
 
+        hesap.setBakiye(yeniBakiye);
         hesapRepository.updateBakiye(hesap.getId(), yeniBakiye);
         hesapHareketleriService.hesapHareketiEkle(hesap, miktar, HareketTuru.CEKME);
-
         return hesap;
     }
 

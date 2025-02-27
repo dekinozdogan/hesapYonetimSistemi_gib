@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import com.example.hesapyonetimsistemi.banka.enums.HesapTuru;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,5 +21,6 @@ public class HesapDto {
     private String hesapSahipAd;
     private String hesapSahipSoyad;
     private HesapTuru hesapturu;
+    @JsonSerialize (using = LocalDateTimeSerializer.class)
     private BigDecimal bakiye;
 }

@@ -36,7 +36,7 @@ public class Hesap {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(name = "hesap_sahip_kimlik_no", nullable = false, unique = true)
+    @Column(name = "hesap_sahip_kimlik_no", nullable = false)
     private Long hesapSahipKimlikNo;
 
     @Column(name = "hesap_sahip_ad", length = 50, nullable = false)

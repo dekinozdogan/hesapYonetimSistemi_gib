@@ -12,7 +12,7 @@ public class YeniHesapMapper {
                 .hesapSahipKimlikNo(yeniHesapDto.getHesapSahipTcNo())
                 .hesapSahipAd(yeniHesapDto.getHesapSahipAd())
                 .hesapSahipSoyad(yeniHesapDto.getHesapSahipSoyad())
-                .hesapTuru(yeniHesapDto.getHesapturu())
+                .hesapTuru(yeniHesapDto.getHesapTuru())
                 .bakiye(BigDecimal.ZERO) 
                 .build();
     }

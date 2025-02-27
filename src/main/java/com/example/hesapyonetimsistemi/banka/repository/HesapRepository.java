@@ -17,8 +17,6 @@ import com.example.hesapyonetimsistemi.banka.enums.HesapTuru;
 @Repository
 public interface HesapRepository extends JpaRepository<Hesap, UUID> {
 
-    //boolean isHesapVarMi(Long hesapSahipKimlikNo, HesapTuru hesapTuru);
-
     @Query("SELECT h FROM Hesap h WHERE h.hesapSahipKimlikNo = :hesapSahipKimlikNo AND h.hesapTuru = :hesapTuru")
     List<Hesap> getHesapListesiByTcTur(@Param("hesapSahipKimlikNo") Long tcKimlikNo, @Param("hesapTuru") HesapTuru hesapTuru);
 

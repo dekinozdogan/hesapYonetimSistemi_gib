@@ -16,16 +16,14 @@ import com.example.hesapyonetimsistemi.banka.repository.HesapHareketleriReposito
 @Service
 public class HesapHareketleriService {
     private final HesapHareketleriRepository hesapHareketleriRepository;
-    @Autowired
 
+    @Autowired
     public HesapHareketleriService(HesapHareketleriRepository hesapHareketleriRepository) {
         this.hesapHareketleriRepository = hesapHareketleriRepository;
     }
-
     public List<HesapHareketleri> findByHesapIdAndHareketTuru(UUID id, HareketTuru hareketTuru) {
         return hesapHareketleriRepository.findByHesapIdAndHareketTuru(id, hareketTuru);
     }
-
     public void hesapHareketiEkle(Hesap hesap, BigDecimal miktar, HareketTuru hareketTuru) {
         HesapHareketleri hareket = HesapHareketleri.builder()
                 .hesap(hesap)
@@ -36,5 +34,4 @@ public class HesapHareketleriService {
 
         hesapHareketleriRepository.save(hareket);
     }
-
 }

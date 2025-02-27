@@ -5,9 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,77 +31,75 @@ public class HesapController {
     private final HesapService hesapService;
 
     public HesapController(HesapService hesapService) {
+
         this.hesapService = hesapService;
     }
 
-    @GetMapping("/hesap/{tcKimlikNo}/{hesapTuru}")
-    public ResponseEntity<HesapDto> getHesapByTcVeTuru( @PathVariable Long tcKimlikNo, @PathVariable HesapTuru hesapTuru) {
-//
-    if(isValidTCKN(tcKimlikNo)) {
-        List<Hesap> hesapListesi = hesapService.getHesapListesiByTcTur(tcKimlikNo, hesapTuru);
+    @GetMapping("/{tcKimlikNo}/{hesapTuru}")
+    public ResponseEntity<HesapDto> getHesapByTcVeTuru(@PathVariable Long tcKimlikNo, @PathVariable HesapTuru hesapTuru) {
+        try {
+            if (isValidTCKN(tcKimlikNo)) {
+                List<Hesap> hesapListesi = hesapService.getHesapListesiByTcTur(tcKimlikNo, hesapTuru);
 
-        if (hesapListesi.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Bu TC Kimlik No ve hesap türüne ait kayıt bulunamadı");
-        } else if (hesapListesi.size() > 1) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Bu TC Kimlik No ve hesap türüne ait birden fazla hesap mevcut!");
+                if (hesapListesi.isEmpty()) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Bu TC Kimlik No ve hesap türüne ait kayıt bulunamadı");
+                } else if (hesapListesi.size() > 1) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "Bu TC Kimlik No ve hesap türüne ait birden fazla hesap mevcut!");
+                }
+
+                Hesap hesap = hesapListesi.stream().findFirst().orElse(null);
+                return ResponseEntity.ok(HesapMapper.toDTO(hesap));
+            } else {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "TC Kimlik No 11 haneli olmalı ve sadece rakam içermeli");
+            }
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Beklenmeyen bir hata oluştu", e);
         }
-    
-        Hesap hesap = hesapListesi.stream().findFirst().orElse(null);
-        return ResponseEntity.ok(HesapMapper.toDTO(hesap));
-    } else {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz TC Kimlik Numarası!");
-    }
-
     }
     @PostMapping("/hesapEkle")
-    public ResponseEntity<HesapDto> hesapEkle( @RequestBody YeniHesapDto yeniHesapDto) {
-
-    Long tcKimlikNo = yeniHesapDto.getHesapSahipTcNo();
-
-    if (isValidTCKN(tcKimlikNo)) {
-        Hesap kaydedilenHesap = hesapService.hesapEkle(yeniHesapDto);
-        if (kaydedilenHesap == null) {
-            return ResponseEntity.badRequest().build();
-        }else {
+    public ResponseEntity<?> hesapEkle(@RequestBody YeniHesapDto yeniHesapDto) {
+        try {
+            Hesap kaydedilenHesap = hesapService.hesapEkle(yeniHesapDto);
             return ResponseEntity.ok(HesapMapper.toDTO(kaydedilenHesap));
-        }  
-    } else {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz TC Kimlik Numarası.");
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Beklenmeyen bir hata oluştu: " + e.getMessage());
+        }
     }
-    }
-
     private boolean isValidTCKN(Long tcKimlikNo) {
         String tcknStr = String.valueOf(tcKimlikNo);
-    
+
         if (tcknStr.length() != 11) {
             return false;
         }
-    
         int totalOdd = 0, totalEven = 0, total = 0;
-    
+
         for (int i = 0; i < 9; i++) {
             int digit = Character.getNumericValue(tcknStr.charAt(i));
             if (i % 2 == 0) totalOdd += digit;
             else totalEven += digit;
             total += digit;
         }
-    
+
         int tenthDigit = ((totalOdd * 7) - totalEven) % 10;
         int eleventhDigit = (total + tenthDigit) % 10;
-    
+
         return tenthDigit == Character.getNumericValue(tcknStr.charAt(9)) &&
-               eleventhDigit == Character.getNumericValue(tcknStr.charAt(10));
+                eleventhDigit == Character.getNumericValue(tcknStr.charAt(10));
     }
 
     @PutMapping("/hesapGuncelle/{hesapId}")
-    public ResponseEntity<HesapDto> hesapGuncelle(@PathVariable UUID hesapId,  @RequestBody HesapDto dto) {
-    
-    Hesap hesap = hesapService.hesapGuncelle(hesapId, dto);
-
-    if (hesap == null) {
-        return ResponseEntity.badRequest().build();
-    }else {
-        return ResponseEntity.ok(HesapMapper.toDTO(hesap));
+    public ResponseEntity<?> hesapGuncelle(@PathVariable UUID hesapId, @RequestBody HesapDto dto) {
+        try {
+            Hesap hesap = hesapService.hesapGuncelle(hesapId, dto);
+            return ResponseEntity.ok(HesapMapper.toDTO(hesap));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body("Hesap Güncellenemedi: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("Hesap güncelleme işlemi başarısız oldu.");
         }
     }
 
@@ -114,26 +109,30 @@ public class HesapController {
         return ResponseEntity.ok(Map.of("message", "Hesap başarıyla silindi"));
     }
 
-    @PostMapping("/paraYatir/{hesapId}/{miktar}")
-    public ResponseEntity<HesapDto> paraYatir(@PathVariable UUID hesapId, @PathVariable BigDecimal miktar) {
-        Hesap paraYatir = hesapService.paraYatir(hesapId, miktar);
-        if (paraYatir == null) {
-            return ResponseEntity.badRequest().build();
-        } else {
+    @PutMapping("/paraYatir/{hesapId}/{miktar}")
+    public ResponseEntity<?> paraYatir(@PathVariable UUID hesapId, @PathVariable BigDecimal miktar) {
+        try {
+            Hesap paraYatir = hesapService.paraYatir(hesapId, miktar);
             return ResponseEntity.ok(HesapMapper.toDTO(paraYatir));
-            }      
-        }
-
-    @PutMapping("/paraCek/{hesapId}/{miktar}")
-    public ResponseEntity<HesapDto> paraCek(@PathVariable UUID hesapId, @PathVariable BigDecimal miktar) {
-        Hesap paraCek = hesapService.paraCek(hesapId, miktar);
-        if (paraCek == null) {
-            return ResponseEntity.badRequest().build();
-        } else {
-            return ResponseEntity.ok(HesapMapper.toDTO(paraCek));
-            }      
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Hata: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Bilinmeyen bir hata oluştu.");
         }
     }
+    @PutMapping("/paraCek/{hesapId}/{miktar}")
+    public ResponseEntity<?> paraCek(@PathVariable UUID hesapId, @PathVariable BigDecimal miktar) {
+        try {
+            Hesap paraCek = hesapService.paraCek(hesapId, miktar);
+            return ResponseEntity.ok(HesapMapper.toDTO(paraCek));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Hata: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Bilinmeyen bir hata oluştu.");
+        }
+    }
+}
+
 
 
     

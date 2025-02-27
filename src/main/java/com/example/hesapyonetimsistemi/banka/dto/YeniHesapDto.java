@@ -16,7 +16,7 @@ public class YeniHesapDto {
     private Long hesapSahipTcNo;
     private String hesapSahipAd;
     private String hesapSahipSoyad;
-    private HesapTuru hesapturu;
+    private HesapTuru hesapTuru;
     private BigDecimal bakiye;
 
 }
