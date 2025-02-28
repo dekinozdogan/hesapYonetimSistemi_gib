@@ -49,7 +49,7 @@ public class HesapControllerTest {
         Long tcKimlikNo = 35489326112L;
         Hesap hesap = new Hesap();
         hesap.setId(UUID.randomUUID());
-        hesap.setHesapSahipAd("Hakan");
+        hesap.setHesapSahipAd("Ali");
         hesap.setHesapSahipSoyad("Serdar");
         hesap.setHesapTuru(HesapTuru.TL);
         hesap.setHesapSahipKimlikNo(tcKimlikNo);
@@ -85,14 +85,14 @@ public class HesapControllerTest {
         Long tcKimlikNo = 35489326112L;
         Hesap hesap = new Hesap();
         hesap.setId(UUID.randomUUID());
-        hesap.setHesapSahipAd("Hakan");
+        hesap.setHesapSahipAd("Ali");
         hesap.setHesapSahipSoyad("Serdar");
         hesap.setHesapTuru(HesapTuru.TL);
         hesap.setHesapSahipKimlikNo(tcKimlikNo);
         hesap.setBakiye(BigDecimal.ZERO);
 
         YeniHesapDto yeniHesapDto = new YeniHesapDto();
-        yeniHesapDto.setHesapSahipAd("Hakan");
+        yeniHesapDto.setHesapSahipAd("Ali");
         yeniHesapDto.setHesapSahipSoyad("Serdar");
         yeniHesapDto.setHesapTuru(HesapTuru.TL);
         yeniHesapDto.setBakiye(BigDecimal.ZERO);
@@ -101,7 +101,7 @@ public class HesapControllerTest {
 
         mockMvc.perform(post("/hesap/hesapEkle")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"hesapSahipAd\":\"Hakan\",\"hesapSahipSoyad\":\"Serdar\",\"hesapTuru\":\"TL\",\"hesapSahipTcNo\":\"35489326112\",\"bakiye\":\"0\"}"))
+                        .content("{\"hesapSahipAd\":\"Ali\",\"hesapSahipSoyad\":\"Serdar\",\"hesapTuru\":\"TL\",\"hesapSahipTcNo\":\"35489326112\",\"bakiye\":\"0\"}"))
                 .andExpect(status().isOk());
 
         verify(hesapService).hesapEkle(yeniHesapDto);
@@ -114,14 +114,14 @@ public class HesapControllerTest {
 
         Hesap hesap = new Hesap();
         hesap.setId(hesapId);
-        hesap.setHesapSahipAd("Hakan");
+        hesap.setHesapSahipAd("Ali");
         hesap.setHesapSahipSoyad("Serdar");
         hesap.setHesapTuru(HesapTuru.TL);
         hesap.setHesapSahipKimlikNo(tcKimlikNo);
         hesap.setBakiye(BigDecimal.ZERO);
 
         HesapDto hesapDto = new HesapDto();
-        hesapDto.setHesapSahipAd("Hakan");
+        hesapDto.setHesapSahipAd("Ali");
         hesapDto.setHesapSahipSoyad("Serdar");
         hesapDto.setHesapturu(HesapTuru.TL);
         hesapDto.setBakiye(BigDecimal.ZERO);
@@ -130,7 +130,7 @@ public class HesapControllerTest {
 
         mockMvc.perform(put("/hesap/hesapGuncelle/{hesapId}", hesapId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"hesapSahipAd\":\"Hakan\",\"hesapSahipSoyad\":\"Serdar\",\"hesapTuru\":\"TL\",\"hesapSahipTcNo\":\"35489326112\",\"bakiye\":\"0\"}"))
+                        .content("{\"hesapSahipAd\":\"Ali\",\"hesapSahipSoyad\":\"Serdar\",\"hesapturu\":\"TL\",\"hesapSahipTcNo\":\"35489326112\",\"bakiye\":\"0\"}"))
                 .andExpect(status().isOk());
 
         verify(hesapService).hesapGuncelle(hesapId, hesapDto);
