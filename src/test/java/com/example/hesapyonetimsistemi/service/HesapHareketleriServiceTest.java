@@ -1,6 +1,5 @@
 package com.example.hesapyonetimsistemi.service;
 
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -20,9 +19,7 @@ import com.example.hesapyonetimsistemi.banka.entity.Hesap;
 import com.example.hesapyonetimsistemi.banka.entity.HesapHareketleri;
 import com.example.hesapyonetimsistemi.banka.enums.HareketTuru;
 import com.example.hesapyonetimsistemi.banka.repository.HesapHareketleriRepository;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
 class HesapHareketleriServiceTest {
 
     @Mock
